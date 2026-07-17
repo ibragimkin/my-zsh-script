@@ -206,10 +206,21 @@ install_plugin \
   zsh-syntax-highlighting \
   https://github.com/zsh-users/zsh-syntax-highlighting.git
 
+finish_installation() {
+  printf 'Installation complete.\n'
+
+  if [[ -t 0 && -t 1 ]]; then
+    printf 'Starting Zsh...\n'
+    cleanup
+    trap - EXIT
+    exec zsh -l
+  fi
+}
+
 if [[ -e "$HOME/.zshrc" || -L "$HOME/.zshrc" ]]; then
   if cmp -s "$SOURCE_ZSHRC" "$HOME/.zshrc"; then
     printf '%s is already installed; no replacement needed.\n' "$HOME/.zshrc"
-    printf 'Installation complete. Restart Zsh or run: exec zsh\n'
+    finish_installation
     exit 0
   fi
 
@@ -222,4 +233,4 @@ rm -f "$HOME/.zshrc"
 cp "$SOURCE_ZSHRC" "$HOME/.zshrc"
 
 printf 'Installed %s as %s\n' "$SOURCE_ZSHRC" "$HOME/.zshrc"
-printf 'Installation complete. Restart Zsh or run: exec zsh\n'
+finish_installation

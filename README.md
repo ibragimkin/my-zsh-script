@@ -22,8 +22,6 @@ The installer uses Homebrew on macOS and `apt` on other systems to install
 missing dependencies. An existing `~/.zshrc` is backed up before replacement.
 You may be asked for your password when the default shell is changed.
 
-Reconnect your terminal session after installation, or run:
-
-```bash
-exec zsh
-```
+When installation finishes in an interactive terminal, the script starts a
+Zsh login shell automatically. Future terminal and SSH sessions will also use
+Zsh by default.
