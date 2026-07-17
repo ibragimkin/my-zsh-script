@@ -137,20 +137,20 @@ set_default_shell() {
   fi
 
   if [[ -r /etc/shells ]] && ! grep -Fxq "$zsh_path" /etc/shells; then
-    printf 'Error: %s is not listed in /etc/shells and cannot be selected.\n' \
+    printf 'Warning: %s is not listed in /etc/shells; the default shell will not be changed.\n' \
       "$zsh_path" >&2
-    exit 1
+    return
   fi
 
   if ! command -v chsh >/dev/null 2>&1; then
-    printf 'Error: chsh is required to set Zsh as the default shell.\n' >&2
-    exit 1
+    printf 'Warning: chsh is unavailable; the default shell will not be changed.\n' >&2
+    return
   fi
 
   printf 'Setting %s as the default shell for %s...\n' "$zsh_path" "$username"
   if ! chsh -s "$zsh_path" "$username"; then
-    printf 'Error: could not change the default shell for %s.\n' "$username" >&2
-    exit 1
+    printf 'Warning: could not change the default shell for %s; continuing installation.\n' \
+      "$username" >&2
   fi
 }
 

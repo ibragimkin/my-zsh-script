@@ -20,8 +20,9 @@ sudo apt-get update && sudo apt-get install -y curl
 
 The installer uses Homebrew on macOS and `apt` on other systems to install
 missing dependencies. An existing `~/.zshrc` is backed up before replacement.
-You may be asked for your password when the default shell is changed.
+You may be asked for your password when the default shell is changed. If that
+step fails, the rest of the installation continues normally.
 
 When installation finishes in an interactive terminal, the script starts a
-Zsh login shell automatically. Future terminal and SSH sessions will also use
-Zsh by default.
+Zsh login shell automatically. If the default-shell change succeeds, future
+terminal and SSH sessions will also use Zsh.
