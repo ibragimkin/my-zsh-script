@@ -107,6 +107,55 @@ install_requirements() {
 
 install_requirements
 
+set_default_shell() {
+  local username
+  local current_shell="${SHELL:-}"
+  local zsh_path="$(command -v zsh)"
+  local candidate
+
+  username="$(id -un)"
+
+  if command -v getent >/dev/null 2>&1; then
+    current_shell="$(getent passwd "$username" | awk -F: '{print $7}')"
+  elif command -v dscl >/dev/null 2>&1; then
+    current_shell="$(dscl . -read "/Users/$username" UserShell 2>/dev/null | awk '{print $2}')"
+  fi
+
+  if [[ -r /etc/shells ]] && ! grep -Fxq "$zsh_path" /etc/shells; then
+    for candidate in /bin/zsh /usr/bin/zsh /opt/homebrew/bin/zsh /usr/local/bin/zsh; do
+      if [[ -x "$candidate" ]] && grep -Fxq "$candidate" /etc/shells; then
+        zsh_path="$candidate"
+        break
+      fi
+    done
+  fi
+
+  if [[ "$current_shell" == "$zsh_path" ]] || \
+    { [[ -x "$current_shell" ]] && [[ "$current_shell" -ef "$zsh_path" ]]; }; then
+    printf 'Zsh is already the default shell for %s.\n' "$username"
+    return
+  fi
+
+  if [[ -r /etc/shells ]] && ! grep -Fxq "$zsh_path" /etc/shells; then
+    printf 'Error: %s is not listed in /etc/shells and cannot be selected.\n' \
+      "$zsh_path" >&2
+    exit 1
+  fi
+
+  if ! command -v chsh >/dev/null 2>&1; then
+    printf 'Error: chsh is required to set Zsh as the default shell.\n' >&2
+    exit 1
+  fi
+
+  printf 'Setting %s as the default shell for %s...\n' "$zsh_path" "$username"
+  if ! chsh -s "$zsh_path" "$username"; then
+    printf 'Error: could not change the default shell for %s.\n' "$username" >&2
+    exit 1
+  fi
+}
+
+set_default_shell
+
 if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
   script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
   if [[ -f "$script_dir/.zshrc" ]]; then
