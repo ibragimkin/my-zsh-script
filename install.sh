@@ -2,10 +2,19 @@
 
 set -euo pipefail
 
-readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-readonly SOURCE_ZSHRC="$SCRIPT_DIR/.zshrc"
+readonly RAW_REPOSITORY_URL="https://raw.githubusercontent.com/ibragimkin/my-zsh-script/main"
 readonly OH_MY_ZSH_DIR="$HOME/.oh-my-zsh"
 readonly ZSH_CUSTOM_DIR="${ZSH_CUSTOM:-$OH_MY_ZSH_DIR/custom}"
+SOURCE_ZSHRC=''
+TEMP_ZSHRC=''
+
+cleanup() {
+  if [[ -n "$TEMP_ZSHRC" ]]; then
+    rm -f "$TEMP_ZSHRC"
+  fi
+}
+
+trap cleanup EXIT
 
 install_requirements() {
   local required=(curl git zsh bat)
@@ -96,12 +105,21 @@ install_requirements() {
   done
 }
 
-if [[ ! -f "$SOURCE_ZSHRC" ]]; then
-  printf 'Error: %s was not found.\n' "$SOURCE_ZSHRC" >&2
-  exit 1
+install_requirements
+
+if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
+  script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ -f "$script_dir/.zshrc" ]]; then
+    SOURCE_ZSHRC="$script_dir/.zshrc"
+  fi
 fi
 
-install_requirements
+if [[ -z "$SOURCE_ZSHRC" ]]; then
+  printf 'Downloading .zshrc from the repository...\n'
+  TEMP_ZSHRC="$(mktemp "${TMPDIR:-/tmp}/my-zsh-script.zshrc.XXXXXX")"
+  curl -fsSL "$RAW_REPOSITORY_URL/.zshrc" -o "$TEMP_ZSHRC"
+  SOURCE_ZSHRC="$TEMP_ZSHRC"
+fi
 
 if [[ ! -d "$OH_MY_ZSH_DIR" ]]; then
   printf 'Installing Oh My Zsh...\n'
