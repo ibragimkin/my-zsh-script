@@ -154,8 +154,6 @@ set_default_shell() {
   fi
 }
 
-set_default_shell
-
 if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
   script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
   if [[ -f "$script_dir/.zshrc" ]]; then
@@ -220,17 +218,19 @@ finish_installation() {
 if [[ -e "$HOME/.zshrc" || -L "$HOME/.zshrc" ]]; then
   if cmp -s "$SOURCE_ZSHRC" "$HOME/.zshrc"; then
     printf '%s is already installed; no replacement needed.\n' "$HOME/.zshrc"
-    finish_installation
-    exit 0
-  fi
+  else
+    backup="$HOME/.zshrc.backup.$(date +%Y%m%d%H%M%S).$$"
+    cp -Pp "$HOME/.zshrc" "$backup"
+    printf 'Backed up the existing .zshrc to %s\n' "$backup"
 
-  backup="$HOME/.zshrc.backup.$(date +%Y%m%d%H%M%S).$$"
-  cp -Pp "$HOME/.zshrc" "$backup"
-  printf 'Backed up the existing .zshrc to %s\n' "$backup"
+    rm -f "$HOME/.zshrc"
+    cp "$SOURCE_ZSHRC" "$HOME/.zshrc"
+    printf 'Installed %s as %s\n' "$SOURCE_ZSHRC" "$HOME/.zshrc"
+  fi
+else
+  cp "$SOURCE_ZSHRC" "$HOME/.zshrc"
+  printf 'Installed %s as %s\n' "$SOURCE_ZSHRC" "$HOME/.zshrc"
 fi
 
-rm -f "$HOME/.zshrc"
-cp "$SOURCE_ZSHRC" "$HOME/.zshrc"
-
-printf 'Installed %s as %s\n' "$SOURCE_ZSHRC" "$HOME/.zshrc"
+set_default_shell
 finish_installation
